@@ -27,6 +27,17 @@ dotenv.config();
 
 const app = express();
 
+// MIME type middleware - Add this near the top before other middleware
+// This ensures JavaScript files are served with the correct MIME type
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) {
+    res.type('application/javascript');
+  } else if (req.path.endsWith('.mjs')) {
+    res.type('application/javascript');
+  }
+  next();
+});
+
 // Rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -100,27 +111,6 @@ app.use('/api/admin', adminRouter);
 app.use('/api/properties', adminProperties);
 app.use('/api', propertyRoutes);
 
-
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  const statusCode = err.status || 500;
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    statusCode,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    timestamp: new Date().toISOString()
-  });
-});
-
-
-// Handle unhandled rejections
-process.on('unhandledRejection', (err) => {
-  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.error(err);
-  process.exit(1);
-});
-
 // Status check endpoint
 app.get('/status', (req, res) => {
   res.status(200).json({ status: 'OK', time: new Date().toISOString() });
@@ -169,8 +159,18 @@ const NODE_ENV = "production";
 
 
 if (NODE_ENV === "production") {
-  // Serve User Frontend
-  app.use(express.static(path.join(__dirname, "dist")));
+  // Serve User Frontend with proper MIME types
+  app.use(express.static(path.join(__dirname, "dist"), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.mjs')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    }
+  }));
   
   // app.use(express.static(path.join(__dirname, "dist_admin")));
   
@@ -182,7 +182,13 @@ if (NODE_ENV === "production") {
   //     res.sendFile(path.resolve(__dirname, "dist_admin", "index.html"))
   // );
 
-  // Catch-all for User SPA routing
+  // Handle specific JS files that might be causing issues
+  app.get('/index-*.js', (req, res) => {
+    res.set('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'dist', req.path.substring(1)));
+  });
+
+  // Catch-all for User SPA routing - Must be last
   app.get("*", (req, res) =>
       res.sendFile(path.resolve(__dirname, "dist", "index.html"))
   );
@@ -190,6 +196,26 @@ if (NODE_ENV === "production") {
 } else {
   app.get("/", (req, res) => res.send("Please set to production"));
 }
+
+// Error handling middleware - Make sure this is after routes
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  const statusCode = err.status || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || 'Internal server error',
+    statusCode,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Handle unhandled rejections
+process.on('unhandledRejection', (err) => {
+  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+  console.error(err);
+  process.exit(1);
+});
 
 const port = process.env.PORT || 4000;
 
