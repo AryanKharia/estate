@@ -37,7 +37,7 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.json({ message: "Server error", success: false });
+    res.json({ message: error, success: false });
   }
 };
 
@@ -65,7 +65,7 @@ const register = async (req, res) => {
     return res.json({ token, user: { name: newUser.name, email: newUser.email }, success: true });
   } catch (error) {
     console.error(error);
-    return res.json({ message: "Server error", success: false });
+    return res.json({ message: error, success: false });
   }
 };
 
