@@ -166,15 +166,15 @@ if (NODE_ENV === "production") {
   // Serve User Frontend
   app.use(express.static(path.join(__dirname, "dist")));
   
-  app.use(express.static(path.join(__dirname, "dist_admin")));
+  // app.use(express.static(path.join(__dirname, "dist_admin")));
   
   // Serve Admin Frontend
-  app.use("/admin", express.static(path.join(__dirname, "dist_admin")));
+  // app.use("/admin", express.static(path.join(__dirname, "dist_admin")));
 
-  // Catch-all for Admin SPA routing
-  app.get("/admin/*", (req, res) =>
-      res.sendFile(path.resolve(__dirname, "dist_admin", "index.html"))
-  );
+  // // Catch-all for Admin SPA routing
+  // app.get("/admin/*", (req, res) =>
+  //     res.sendFile(path.resolve(__dirname, "dist_admin", "index.html"))
+  // );
 
   // Catch-all for User SPA routing
   app.get("*", (req, res) =>
