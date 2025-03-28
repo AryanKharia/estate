@@ -43,14 +43,20 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https://ik.imagekit.io"], // Allow ImageKit images
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for frontend needs
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://ik.imagekit.io",  // ✅ ImageKit
+          "https://images.unsplash.com"  // ✅ Unsplash
+        ],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'", "https://ik.imagekit.io"], // Allow ImageKit API requests
+        connectSrc: ["'self'", "https://ik.imagekit.io", "https://images.unsplash.com"],
       },
     },
   })
 );
+
 
 
 app.use(compression());
